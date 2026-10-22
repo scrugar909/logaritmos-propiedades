@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador Interactivo de Propiedades de Logaritmos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX for rendering equations in tabs/headers if needed -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        canvas {
+            touch-action: none;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-600/20 rounded-lg border border-indigo-500/30">
+                    <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                        Propiedades de los Logaritmos
+                    </h1>
+                    <p class="text-xs text-slate-400">Demostración e Inserción Interactiva Animada</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-400">Color clave:</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">Base (n)</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30">Arg (a)</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">Exp (b)</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full flex flex-col gap-6">
+        
+        <!-- Navigation Tabs -->
+        <nav class="flex overflow-x-auto pb-2 gap-2 border-b border-slate-800 text-sm font-medium no-scrollbar">
+            <button onclick="selectTab(1)" id="tab-btn-1" class="tab-btn px-4 py-2.5 rounded-xl border flex items-center gap-2 whitespace-nowrap transition-all duration-200">
+                <span>1. Definición</span>
+            </button>
+            <button onclick="selectTab(2)" id="tab-btn-2" class="tab-btn px-4 py-2.5 rounded-xl border flex items-center gap-2 whitespace-nowrap transition-all duration-200">
+                <span>2. Producto</span>
+            </button>
+            <button onclick="selectTab(3)" id="tab-btn-3" class="tab-btn px-4 py-2.5 rounded-xl border flex items-center gap-2 whitespace-nowrap transition-all duration-200">
+                <span>3. Cociente</span>
+            </button>
+            <button onclick="selectTab(4)" id="tab-btn-4" class="tab-btn px-4 py-2.5 rounded-xl border flex items-center gap-2 whitespace-nowrap transition-all duration-200">
+                <span>4. Potencia</span>
+            </button>
+            <button onclick="selectTab(5)" id="tab-btn-5" class="tab-btn px-4 py-2.5 rounded-xl border flex items-center gap-2 whitespace-nowrap transition-all duration-200">
+                <span>5. Cambio de Base</span>
+            </button>
+            <button onclick="selectTab(6)" id="tab-btn-6" class="tab-btn px-4 py-2.5 rounded-xl border flex items-center gap-2 whitespace-nowrap transition-all duration-200">
+                <span>6. Potencia en Base</span>
+            </button>
+        </nav>
+
+        <!-- Main Display Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Interactive Visualizer (Canvas Area) -->
+            <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-between min-h-[440px]">
+                
+                <div class="w-full flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
+                    <h2 id="tab-title" class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                        <!-- Dynamic Title -->
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button id="play-btn" onclick="togglePlay()" class="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition shadow-lg flex items-center justify-center">
+                            <svg id="play-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <button onclick="resetAnimation()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Wrapper -->
+                <div class="relative w-full h-[280px] bg-slate-950/70 rounded-xl border border-slate-800/80 flex items-center justify-center overflow-hidden">
+                    <canvas id="math-canvas" width="800" height="280" class="w-full h-full object-contain"></canvas>
+                </div>
+
+                <!-- Control Slider -->
+                <div class="w-full mt-6 space-y-2">
+                    <div class="flex justify-between text-xs font-semibold text-slate-400">
+                        <span>Paso Inicial (0%)</span>
+                        <span id="slider-val" class="text-indigo-400 font-mono">0%</span>
+                        <span>Paso Final (100%)</span>
+                    </div>
+                    <input id="step-slider" type="range" min="0" max="100" value="0" step="0.5" 
+                           oninput="onSliderChange(this.value)"
+                           class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Mathematical Formula Box -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Fórmula Matemática
+                    </h3>
+                    <div id="formula-katex" class="text-lg py-3 px-4 bg-slate-950/80 rounded-xl border border-slate-800/80 text-center overflow-x-auto text-indigo-300">
+                        <!-- Rendered by KaTeX -->
+                    </div>
+                </div>
+
+                <!-- Explanation / Interactive Context -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+                    <h3 class="text-xs uppercase tracking-wider font-semibold text-slate-400 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        Explicación
+                    </h3>
+                    <p id="tab-explanation" class="text-slate-300 text-sm leading-relaxed">
+                        <!-- Dynamic explanation -->
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-900/50 py-4 text-center text-xs text-slate-500">
+        <p>Visualizador interactivo de matemáticas • Potencias y Logaritmos</p>
+    </footer>
+
+    <script>
+        // State Variables
+        let currentTab = 1;
+        let animationProgress = 0; // 0 to 1
+        let isPlaying = false;
+        let animationFrame = null;
+
+        const canvas = document.getElementById('math-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Color Palette
+        const COLORS = {
+            log: '#38bdf8',     // Cyan
+            base: '#f59e0b',    // Amber (n)
+            arg: '#f43f5e',     // Rose (a)
+            exp: '#10b981',     // Emerald (b)
+            arg2: '#a855f7',    // Purple (c)
+            base2: '#ec4899',   // Pink (x)
+            text: '#f8fafc',    // Slate light
+            symbol: '#94a3b8'   // Slate dim
+        };
+
+        const TAB_DATA = {
+            1: {
+                title: "Definición del Logaritmo",
+                katex: "\\log_n(a) = b \\iff n^b = a",
+                explanation: "Un logaritmo responde a la pregunta: <i>¿a qué exponente 'b' se debe elevar la base 'n' para obtener el número 'a'?</i><br><br>Observa cómo la <b>base n</b>, el <b>exponente b</b> y el <b>resultado a</b> mantienen su correspondencia directa entre la forma logarítmica y la forma exponencial.",
+                draw: drawDefinition
+            },
+            2: {
+                title: "Logaritmo de un Producto",
+                katex: "\\log_n(a \\cdot c) = \\log_n(a) + \\log_n(c)",
+                explanation: "El logaritmo de un producto es igual a la suma de los logaritmos de los factores. La multiplicación dentro del argumento se transforma en una suma externa de logaritmos.",
+                draw: drawProduct
+            },
+            3: {
+                title: "Logaritmo de un Cociente",
+                katex: "\\log_n\\left(\\frac{a}{c}\\right) = \\log_n(a) - \\log_n(c)",
+                explanation: "El logaritmo de un cociente es la diferencia entre el logaritmo del numerador y el del denominador. La división interna se convierte en una resta de logaritmos.",
+                draw: drawQuotient
+            },
+            4: {
+                title: "Logaritmo de una Potencia",
+                katex: "\\log_n(a^b) = b \\cdot \\log_n(a)",
+                explanation: "El exponente <b>b</b> del argumento se pasa multiplicando al frente del logaritmo. Esta propiedad es fundamental para despejar incógnitas en el exponente.",
+                draw: drawPower
+            },
+            5: {
+                title: "Cambio de Base",
+                katex: "\\log_n(a) = \\frac{\\log_x(a)}{\\log_x(n)}",
+                explanation: "Permite reescribir un logaritmo en cualquier nueva base <b>x</b>. El argumento original <b>a</b> va al numerador y la base original <b>n</b> va al denominador.",
+                draw: drawChangeBase
+            },
+            6: {
+                title: "Potencia en la Base",
+                katex: "\\log_{n^b}(a) = \\frac{1}{b} \\cdot \\log_n(a)",
+                explanation: "Cuando la base del logaritmo tiene un exponente <b>b</b> (es decir, $n^b$), este exponente sale del logaritmo como su inverso multiplicativo ($\\frac{1}{b}$).",
+                draw: drawPotBase
+            }
+        };
+
+        // Initialize application
+        window.onload = () => {
+            selectTab(1);
+            render();
+        };
+
+        function selectTab(tabId) {
+            currentTab = tabId;
+            
+            // Update active styles
+            for(let i=1; i<=6; i++) {
+                const btn = document.getElementById(`tab-btn-${i}`);
+                if(i === tabId) {
+                    btn.className = "tab-btn px-4 py-2.5 rounded-xl border border-indigo-500/50 bg-indigo-600/20 text-indigo-300 flex items-center gap-2 whitespace-nowrap shadow-lg transition-all duration-200 font-semibold";
+                } else {
+                    btn.className = "tab-btn px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 flex items-center gap-2 whitespace-nowrap transition-all duration-200";
+                }
+            }
+
+            // Update UI elements
+            const data = TAB_DATA[tabId];
+            document.getElementById('tab-title').innerText = data.title;
+            document.getElementById('tab-explanation').innerHTML = data.explanation;
+            
+            // Render KaTeX
+            katex.render(data.katex, document.getElementById('formula-katex'), {
+                throwOnError: false,
+                displayMode: true
+            });
+
+            resetAnimation();
+        }
+
+        function resetAnimation() {
+            stopAnimation();
+            animationProgress = 0;
+            document.getElementById('step-slider').value = 0;
+            document.getElementById('slider-val').innerText = '0%';
+            render();
+        }
+
+        function togglePlay() {
+            if(isPlaying) {
+                stopAnimation();
+            } else {
+                if(animationProgress >= 1) animationProgress = 0;
+                isPlaying = true;
+                document.getElementById('play-icon').innerHTML = '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>';
+                animate();
+            }
+        }
+
+        function stopAnimation() {
+            isPlaying = false;
+            if(animationFrame) cancelAnimationFrame(animationFrame);
+            document.getElementById('play-icon').innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>';
+        }
+
+        function animate() {
+            if(!isPlaying) return;
+            animationProgress += 0.008;
+            if(animationProgress >= 1) {
+                animationProgress = 1;
+                stopAnimation();
+            }
+            document.getElementById('step-slider').value = animationProgress * 100;
+            document.getElementById('slider-val').innerText = Math.round(animationProgress * 100) + '%';
+            render();
+            if(isPlaying) {
+                animationFrame = requestAnimationFrame(animate);
+            }
+        }
+
+        function onSliderChange(val) {
+            animationProgress = val / 100;
+            document.getElementById('slider-val').innerText = Math.round(val) + '%';
+            render();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const drawFunc = TAB_DATA[currentTab].draw;
+            if(drawFunc) {
+                drawFunc(animationProgress);
+            }
+        }
+
+        // Helper Lerp Function
+        function lerp(start, end, t) {
+            return start + (end - start) * t;
+        }
+
+        // Smooth Easing Function (Ease-in-out)
+        function easeInOut(t) {
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        }
+
+        
+        /* -------------------------------------------------------------
+           1. DEFINICIÓN DEL LOGARITMO (Tab 1)
+           Mantener fija la estructura log_n(a) = b <=> n^b = a
+           y mover animadamente las letras desde la izquierda a la derecha.
+        ------------------------------------------------------------- */
+        function drawDefinition(p) {
+            const ease = easeInOut(p);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Coordenada central Y
+            const centerY = 140;
+
+            // Lado Izquierdo: log_n(a) = b
+            const leftCenterX = 250;
+            // Puntos de referencia estáticos a la izquierda
+            const posLeftLog = { x: leftCenterX - 110, y: centerY };
+            const posLeftN   = { x: leftCenterX - 52,  y: centerY + 16 }; // Subíndice
+            const posLeftA   = { x: leftCenterX + 10,  y: centerY };
+            const posLeftEq  = { x: leftCenterX + 70,  y: centerY };
+            const posLeftB   = { x: leftCenterX + 115, y: centerY };
+
+            // Lado Derecho: n^b = a
+            const rightCenterX = 600;
+            const posRightN  = { x: rightCenterX - 50, y: centerY };
+            const posRightB  = { x: rightCenterX - 22, y: centerY - 20 }; // Exponente
+            const posRightEq = { x: rightCenterX + 20, y: centerY };
+            const posRightA  = { x: rightCenterX + 70, y: centerY };
+
+            // Símbolo de Equivalencia Central <=>
+            ctx.fillStyle = COLORS.symbol;
+            ctx.font = 'bold 32px Inter';
+            ctx.fillText('⇔', 425, centerY);
+
+            // Dibujar estructura estática fija
+            // Lado Izquierdo Fijo
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', posLeftLog.x, posLeftLog.y);
+
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('(   )', posLeftA.x, posLeftA.y);
+
+            ctx.fillStyle = COLORS.symbol;
+            ctx.fillText('=', posLeftEq.x, posLeftEq.y);
+
+            // Lado Derecho Fijo
+            ctx.fillText('=', posRightEq.x, posRightEq.y);
+
+            // Si se desea mostrar fantasmas o guías en el lado derecho durante el paso inicial
+            ctx.globalAlpha = 0.15;
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', posRightN.x, posRightN.y);
+            
+            ctx.font = 'bold 26px Inter';
+            ctx.fillStyle = COLORS.exp;
+            ctx.fillText('b', posRightB.x, posRightB.y);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg;
+            ctx.fillText('a', posRightA.x, posRightA.y);
+            ctx.globalAlpha = 1.0;
+
+            // Posiciones animadas para n, b, a desdibujando su trayectoria hasta el lado derecho
+            // Variable 'n' (Base)
+            const curNX = lerp(posLeftN.x, posRightN.x, ease);
+            const curNY = lerp(posLeftN.y, posRightN.y, ease);
+            const curNSize = lerp(26, 36, ease);
+
+            ctx.font = `bold ${curNSize}px Inter`;
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curNX, curNY);
+
+            // Variable 'a' (Argumento)
+            const curAX = lerp(posLeftA.x, posRightA.x, ease);
+            const curAY = lerp(posLeftA.y, posRightA.y, ease);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg;
+            ctx.fillText('a', curAX, curAY);
+
+            // Variable 'b' (Exponente/Resultado)
+            const curBX = lerp(posLeftB.x, posRightB.x, ease);
+            const curBY = lerp(posLeftB.y, posRightB.y, ease);
+            const curBSize = lerp(36, 26, ease);
+
+            ctx.font = `bold ${curBSize}px Inter`;
+            ctx.fillStyle = COLORS.exp;
+            ctx.fillText('b', curBX, curBY);
+        }
+
+        /* -------------------------------------------------------------
+           2. PRODUCTO: log_n(a * c) = log_n(a) + log_n(c)
+        ------------------------------------------------------------- */
+        function drawProduct(p) {
+            const ease = easeInOut(p);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const centerY = 140;
+
+            // Posiciones Iniciales: log_n(a · c)
+            const startLog = { x: 300, y: centerY };
+            const startN   = { x: 358, y: centerY + 16 };
+            const startA   = { x: 420, y: centerY };
+            const startDot = { x: 450, y: centerY };
+            const startC   = { x: 480, y: centerY };
+
+            // Posiciones Finales: log_n(a) + log_n(c)
+            const endLog1 = { x: 180, y: centerY };
+            const endN1   = { x: 238, y: centerY + 16 };
+            const endA    = { x: 295, y: centerY };
+            
+            const endPlus = { x: 390, y: centerY };
+
+            const endLog2 = { x: 495, y: centerY };
+            const endN2   = { x: 553, y: centerY + 16 };
+            const endC    = { x: 610, y: centerY };
+
+            // Dibujar Logaritmo 1
+            const curLog1X = lerp(startLog.x, endLog1.x, ease);
+            const curN1X   = lerp(startN.x, endN1.x, ease);
+            const curAX    = lerp(startA.x, endA.x, ease);
+
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', curLog1X, centerY);
+            
+            ctx.font = 'bold 26px Inter';
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curN1X, endN1.y);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg;
+            ctx.fillText('a', curAX, centerY);
+
+            // Transición del signo · a +
+            ctx.fillStyle = COLORS.symbol;
+            if (ease < 0.5) {
+                ctx.globalAlpha = 1 - ease * 2;
+                ctx.fillText('·', startDot.x, centerY);
+                ctx.globalAlpha = 1.0;
+            } else {
+                ctx.globalAlpha = (ease - 0.5) * 2;
+                ctx.fillText('+', endPlus.x, centerY);
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Aparición y movimiento de Logaritmo 2 (para el factor c)
+            const curLog2X = lerp(startLog.x, endLog2.x, ease);
+            const curN2X   = lerp(startN.x, endN2.x, ease);
+            const curCX    = lerp(startC.x, endC.x, ease);
+
+            ctx.globalAlpha = ease;
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', curLog2X, centerY);
+
+            ctx.font = 'bold 26px Inter';
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curN2X, endN2.y);
+            ctx.globalAlpha = 1.0;
+
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg2;
+            ctx.fillText('c', curCX, centerY);
+
+            // Paréntesis adaptativos
+            ctx.fillStyle = COLORS.log;
+            if(ease < 0.5) {
+                ctx.fillText('(', startA.x - 30, centerY);
+                ctx.fillText(')', startC.x + 30, centerY);
+            } else {
+                // Paréntesis de a
+                ctx.globalAlpha = (ease - 0.5) * 2;
+                ctx.fillText('(', endA.x - 25, centerY);
+                ctx.fillText(')', endA.x + 25, centerY);
+
+                // Paréntesis de c
+                ctx.fillText('(', endC.x - 25, centerY);
+                ctx.fillText(')', endC.x + 25, centerY);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        /* -------------------------------------------------------------
+           3. COCIENTE: log_n(a/c) = log_n(a) - log_n(c)
+        ------------------------------------------------------------- */
+        function drawQuotient(p) {
+            const ease = easeInOut(p);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const centerY = 140;
+
+            // Fracción inicial vs Resta final
+            const startX = 400;
+            
+            // Posición final
+            const endLog1 = { x: 180, y: centerY };
+            const endN1   = { x: 238, y: centerY + 16 };
+            const endA    = { x: 295, y: centerY };
+
+            const endMinus = { x: 390, y: centerY };
+
+            const endLog2 = { x: 495, y: centerY };
+            const endN2   = { x: 553, y: centerY + 16 };
+            const endC    = { x: 610, y: centerY };
+
+            // Logaritmo Principal
+            const curLog1X = lerp(startX - 90, endLog1.x, ease);
+            const curN1X   = lerp(startX - 32, endN1.x, ease);
+
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', curLog1X, centerY);
+
+            ctx.font = 'bold 26px Inter';
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curN1X, endN1.y);
+
+            // Numerador 'a'
+            const curAX = lerp(startX + 30, endA.x, ease);
+            const curAY = lerp(centerY - 25, centerY, ease);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg;
+            ctx.fillText('a', curAX, curAY);
+
+            // Denominador 'c'
+            const curCX = lerp(startX + 30, endC.x, ease);
+            const curCY = lerp(centerY + 25, centerY, ease);
+
+            ctx.fillStyle = COLORS.arg2;
+            ctx.fillText('c', curCX, curCY);
+
+            // Barra de Fracción / Signo menos
+            ctx.fillStyle = COLORS.symbol;
+            if(ease < 0.5) {
+                // Barra horizontal
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = COLORS.symbol;
+                ctx.beginPath();
+                ctx.moveTo(startX + 10, centerY);
+                ctx.lineTo(startX + 50, centerY);
+                ctx.stroke();
+            } else {
+                ctx.globalAlpha = (ease - 0.5) * 2;
+                ctx.fillText('−', endMinus.x, centerY);
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Logaritmo 2 emergente
+            const curLog2X = lerp(startX, endLog2.x, ease);
+            const curN2X   = lerp(startX + 58, endN2.x, ease);
+
+            ctx.globalAlpha = ease;
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', curLog2X, centerY);
+
+            ctx.font = 'bold 26px Inter';
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curN2X, endN2.y);
+            ctx.globalAlpha = 1.0;
+        }
+
+        /* -------------------------------------------------------------
+           4. POTENCIA EN ARGUMENTO: log_n(a^b) = b * log_n(a)
+        ------------------------------------------------------------- */
+        function drawPower(p) {
+            const ease = easeInOut(p);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const centerY = 140;
+
+            // Puntos clave
+            const startLog = { x: 350, y: centerY };
+            const startN   = { x: 408, y: centerY + 16 };
+            const startA   = { x: 465, y: centerY };
+            const startB   = { x: 495, y: centerY - 20 }; // Exponente inicial
+
+            const endB    = { x: 260, y: centerY };     // Multiplicador inicial
+            const endLog  = { x: 380, y: centerY };
+            const endN    = { x: 438, y: centerY + 16 };
+            const endA    = { x: 495, y: centerY };
+
+            // Animación del exponente 'b'
+            const curBX = lerp(startB.x, endB.x, ease);
+            const curBY = lerp(startB.y, endB.y, ease);
+            const curBSize = lerp(26, 36, ease);
+
+            ctx.font = `bold ${curBSize}px Inter`;
+            ctx.fillStyle = COLORS.exp;
+            ctx.fillText('b', curBX, curBY);
+
+            // Animación del cuerpo del logaritmo
+            const curLogX = lerp(startLog.x, endLog.x, ease);
+            const curNX   = lerp(startN.x, endN.x, ease);
+            const curAX   = lerp(startA.x, endA.x, ease);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', curLogX, centerY);
+
+            ctx.font = 'bold 26px Inter';
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curNX, endN.y);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg;
+            ctx.fillText('a', curAX, centerY);
+
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('(', curAX - 25, centerY);
+            ctx.fillText(')', curAX + 25, centerY);
+        }
+
+        /* -------------------------------------------------------------
+           5. CAMBIO DE BASE: log_n(a) = log_x(a) / log_x(n)
+        ------------------------------------------------------------- */
+        function drawChangeBase(p) {
+            const ease = easeInOut(p);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const centerY = 140;
+
+            // Formato original: log_n(a) en centro
+            const startX = 400;
+
+            // Formato final: Fracción
+            const fractionX = 420;
+
+            // Logaritmo en el numerador
+            const numLogY = lerp(centerY, centerY - 50, ease);
+            const denLogY = lerp(centerY, centerY + 50, ease);
+
+            // Dibuja Barra de fracción emergente
+            if(ease > 0.2) {
+                ctx.globalAlpha = (ease - 0.2) / 0.8;
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = COLORS.symbol;
+                ctx.beginPath();
+                ctx.moveTo(fractionX - 120, centerY);
+                ctx.lineTo(fractionX + 120, centerY);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+
+            // NUMERADOR: log_x(a)
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', fractionX - 50, numLogY);
+
+            // Nueva base x en numerador
+            ctx.font = 'bold 24px Inter';
+            ctx.fillStyle = COLORS.base2;
+            ctx.globalAlpha = ease;
+            ctx.fillText('x', fractionX - 8, numLogY + 14);
+            ctx.globalAlpha = 1.0;
+
+            // Argumento 'a'
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg;
+            const curAX = lerp(startX + 65, fractionX + 45, ease);
+            ctx.fillText('a', curAX, numLogY);
+
+            // DENOMINADOR: log_x(n)
+            ctx.globalAlpha = ease;
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', fractionX - 50, denLogY);
+
+            ctx.font = 'bold 24px Inter';
+            ctx.fillStyle = COLORS.base2;
+            ctx.fillText('x', fractionX - 8, denLogY + 14);
+            ctx.globalAlpha = 1.0;
+
+            // Base antigua 'n' pasando al denominador
+            const curNX = lerp(startX + 8, fractionX + 45, ease);
+            const curNY = lerp(centerY + 16, denLogY, ease);
+            const curNSize = lerp(26, 36, ease);
+
+            ctx.font = `bold ${curNSize}px Inter`;
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curNX, curNY);
+        }
+
+        /* -------------------------------------------------------------
+           6. POTENCIA EN LA BASE (Tab 6 - Arreglo clave)
+           log_{n^b}(a) => (1/b) * log_n(a)
+           Alineación perfecta del exponente b a la derecha de n
+        ------------------------------------------------------------- */
+        function drawPotBase(p) {
+            const ease = easeInOut(p);
+
+            ctx.font = 'bold 36px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const centerY = 140;
+
+            // Configuración de posiciones iniciales bien calculadas:
+            // "log" ocupa x: 300
+            // Subíndice base "n" a la derecha de log
+            // Exponente "b" colocado como superíndice de la base "n"
+            const startLogX = 300;
+            const startNX   = startLogX + 58;  // 358
+            const startNY   = centerY + 18;     // Subíndice
+
+            // 'b' queda al lado derecho superior de 'n' (exponente de la base)
+            const startBX   = startNX + 24;    // 382
+            const startBY   = startNY - 18;    // Levemente por encima de n
+
+            const startAX   = startBX + 55;    // 437 (Argumento)
+
+            // Posiciones finales para: (1/b) · log_n(a)
+            const endFracX = 260; // Centro del 1/b
+            const endBX    = endFracX;
+            const endBY    = centerY + 30; // Denominador del 1/b
+
+            const endLogX  = 430;
+            const endNX    = endLogX + 58;
+            const endNY    = centerY + 18;
+            const endAX    = endNX + 55;
+
+            // 1. Dibujar Exponente 'b' animándose desde la base hacia el coeficiente 1/b
+            const curBX = lerp(startBX, endBX, ease);
+            const curBY = lerp(startBY, endBY, ease);
+            const curBSize = lerp(22, 28, ease);
+
+            ctx.font = `bold ${curBSize}px Inter`;
+            ctx.fillStyle = COLORS.exp;
+            ctx.fillText('b', curBX, curBY);
+
+            // 2. Dibujar el numerador '1' y la barra de fracción que aparecen al avanzar
+            if(ease > 0.1) {
+                const fracAlpha = (ease - 0.1) / 0.9;
+                ctx.globalAlpha = fracAlpha;
+                
+                // Numerador 1
+                ctx.font = 'bold 28px Inter';
+                ctx.fillStyle = COLORS.symbol;
+                ctx.fillText('1', endFracX, centerY - 25);
+
+                // Linea de fracción
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = COLORS.symbol;
+                ctx.beginPath();
+                ctx.moveTo(endFracX - 22, centerY - 2);
+                ctx.lineTo(endFracX + 22, centerY - 2);
+                ctx.stroke();
+
+                ctx.globalAlpha = 1.0;
+            }
+
+            // 3. Dibujar "log" principal
+            const curLogX = lerp(startLogX, endLogX, ease);
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('log', curLogX, centerY);
+
+            // 4. Dibujar base 'n'
+            const curNX = lerp(startNX, endNX, ease);
+            ctx.font = 'bold 26px Inter';
+            ctx.fillStyle = COLORS.base;
+            ctx.fillText('n', curNX, startNY);
+
+            // 5. Dibujar argumento 'a' con sus paréntesis
+            const curAX = lerp(startAX, endAX, ease);
+            ctx.font = 'bold 36px Inter';
+            ctx.fillStyle = COLORS.arg;
+            ctx.fillText('a', curAX, centerY);
+
+            ctx.fillStyle = COLORS.log;
+            ctx.fillText('(', curAX - 25, centerY);
+            ctx.fillText(')', curAX + 25, centerY);
+        }
+    </script>
+</body>
+</html>
